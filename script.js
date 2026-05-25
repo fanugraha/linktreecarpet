@@ -1,231 +1,147 @@
 /* =========================
-   HEADER SCROLL
+   ELEMENTS SETUP
 ========================= */
-
 const header = document.getElementById("header");
+const menuBtn = document.getElementById("menuBtn");
+const mobileMenu = document.getElementById("mobileMenu");
+const mobileOverlay = document.getElementById("mobileOverlay");
 
-window.addEventListener("scroll", () => {
+const navLinks = document.querySelectorAll(
+  ".desktop-nav a, .mobile-menu a, .toc-card a"
+);
 
+const sections = document.querySelectorAll("section[id]");
+
+/* =========================
+   HEADER SCROLL EFFECT
+========================= */
+function handleHeaderScroll() {
+  if (!header) return;
   if (window.scrollY > 30) {
     header.classList.add("scrolled");
   } else {
     header.classList.remove("scrolled");
   }
-
-});
-
+}
+window.addEventListener("scroll", handleHeaderScroll);
 
 /* =========================
-   MOBILE MENU
+   MOBILE MENU LOGIC
 ========================= */
-
-const menuBtn = document.getElementById("menuBtn");
-const mobileMenu = document.getElementById("mobileMenu");
-const mobileOverlay = document.getElementById("mobileOverlay");
-
 function openMenu() {
+  if (!mobileMenu || !mobileOverlay || !menuBtn) return;
   mobileMenu.classList.add("active");
   mobileOverlay.classList.add("active");
+  
+  // Transform Hamburger icon to 'X'
+  const spans = menuBtn.querySelectorAll("span");
+  spans[0].style.transform = "rotate(45deg) translate(6px, 6px)";
+  spans[1].style.opacity = "0";
+  spans[2].style.transform = "rotate(-45deg) translate(5px, -5px)";
+  
   document.body.style.overflow = "hidden";
 }
 
 function closeMenu() {
+  if (!mobileMenu || !mobileOverlay || !menuBtn) return;
   mobileMenu.classList.remove("active");
   mobileOverlay.classList.remove("active");
+  
+  // Return Hamburger icon to normal
+  const spans = menuBtn.querySelectorAll("span");
+  spans[0].style.transform = "none";
+  spans[1].style.opacity = "1";
+  spans[2].style.transform = "none";
+  
   document.body.style.overflow = "";
 }
 
-menuBtn.addEventListener("click", () => {
-
-  if (mobileMenu.classList.contains("active")) {
-    closeMenu();
-  } else {
-    openMenu();
-  }
-
-});
-
-mobileOverlay.addEventListener("click", closeMenu);
-
-
-/* =========================
-   FAQ ACCORDION
-========================= */
-
-const faqItems = document.querySelectorAll(".faq-item");
-
-faqItems.forEach((item) => {
-
-  const button = item.querySelector(".faq-question");
-
-  button.addEventListener("click", () => {
-
-    const isActive = item.classList.contains("active");
-
-    faqItems.forEach((faq) => {
-      faq.classList.remove("active");
-    });
-
-    if (!isActive) {
-      item.classList.add("active");
-    }
-
+if (menuBtn) {
+  menuBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const isOpen = mobileMenu.classList.contains("active");
+    isOpen ? closeMenu() : openMenu();
   });
+}
 
-});
-
+if (mobileOverlay) {
+  mobileOverlay.addEventListener("click", closeMenu);
+}
 
 /* =========================
-   SMOOTH SCROLL
+   SMOOTH SCROLL NAVIGATION
 ========================= */
-
-const navLinks = document.querySelectorAll('a[href^="#"]');
-
 navLinks.forEach((link) => {
-
   link.addEventListener("click", function (e) {
+    const href = this.getAttribute("href");
+    if (!href || !href.startsWith("#")) return;
 
-    const targetId = this.getAttribute("href");
+    const target = document.querySelector(href);
+    if (!target) return;
 
-    if (targetId.length > 1) {
+    e.preventDefault();
+    closeMenu();
 
-      const target = document.querySelector(targetId);
+    const offset = 100;
+    const targetPosition = target.getBoundingClientRect().top + window.scrollY - offset;
 
-      if (target) {
-
-        e.preventDefault();
-
-        const headerOffset = 110;
-
-        const targetPosition =
-          target.getBoundingClientRect().top +
-          window.pageYOffset -
-          headerOffset;
-
-        window.scrollTo({
-          top: targetPosition,
-          behavior: "smooth"
-        });
-
-        closeMenu();
-      }
-    }
+    window.scrollTo({
+      top: targetPosition,
+      behavior: "smooth",
+    });
   });
-
 });
 
-
 /* =========================
-   ACTIVE SECTION LINK
+   ACTIVE LINK SPY (SCROLL SPY)
 ========================= */
-
-const sections = document.querySelectorAll("section[id]");
-const allLinks = document.querySelectorAll(
-  '.desktop-nav a, .mobile-menu a, .section-nav a, .toc-card a'
-);
-
-window.addEventListener("scroll", () => {
-
-  let current = "";
+function updateActiveLink() {
+  let currentSection = "";
+  const scrollPos = window.scrollY + 120;
 
   sections.forEach((section) => {
-
-    const sectionTop = section.offsetTop - 180;
+    const sectionTop = section.offsetTop;
     const sectionHeight = section.offsetHeight;
 
-    if (
-      window.scrollY >= sectionTop &&
-      window.scrollY < sectionTop + sectionHeight
-    ) {
-      current = section.getAttribute("id");
+    if (scrollPos >= sectionTop && scrollPos < sectionTop + sectionHeight) {
+      currentSection = section.getAttribute("id");
     }
-
   });
 
-  allLinks.forEach((link) => {
-
+  navLinks.forEach((link) => {
     link.classList.remove("active-link");
-
     const href = link.getAttribute("href");
-
-    if (href === `#${current}`) {
+    if (href === `#${currentSection}`) {
       link.classList.add("active-link");
     }
-
   });
-
-});
-
-
-/* =========================
-   HERO FADE EFFECT
-========================= */
-
-const hero = document.querySelector(".hero");
-
-window.addEventListener("scroll", () => {
-
-  const scrollTop = window.scrollY;
-  const opacity = 1 - scrollTop / 700;
-
-  hero.style.backgroundPositionY =
-    `${scrollTop * 0.3}px`;
-
-  hero.style.opacity =
-    opacity > 0.75 ? opacity : 0.75;
-
-});
-
+}
+window.addEventListener("scroll", updateActiveLink);
 
 /* =========================
-   REVEAL ON SCROLL
+   REVEAL ON SCROLL ANIMATION (FIXED ERROR)
 ========================= */
-
-const revealItems = document.querySelectorAll(
-  ".section-block, .hero-card, .faq-item"
-);
+const revealItems = document.querySelectorAll(".animation-item");
 
 const revealObserver = new IntersectionObserver(
-
   (entries) => {
-
     entries.forEach((entry) => {
-
       if (entry.isIntersecting) {
         entry.target.classList.add("show");
       }
-
     });
-
   },
-
-  {
-    threshold: 0.12
-  }
-
+  { threshold: 0.1 }
 );
 
 revealItems.forEach((item) => {
   revealObserver.observe(item);
 });
 
-
 /* =========================
-   BUTTON RIPPLE EFFECT
+   INITIALIZATION
 ========================= */
-
-const buttons = document.querySelectorAll(
-  ".btn-primary, .btn-secondary"
-);
-
-buttons.forEach((button) => {
-
-  button.addEventListener("mouseenter", () => {
-    button.style.transform = "translateY(-2px)";
-  });
-
-  button.addEventListener("mouseleave", () => {
-    button.style.transform = "translateY(0)";
-  });
-
+window.addEventListener("DOMContentLoaded", () => {
+  handleHeaderScroll();
+  updateActiveLink();
 });
